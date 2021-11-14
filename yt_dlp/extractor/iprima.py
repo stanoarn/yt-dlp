@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import re
 import time
+from base64 import b64decode
 
 from .common import InfoExtractor
 from ..utils import (
@@ -10,7 +11,8 @@ from ..utils import (
     js_to_json,
     urlencode_postdata,
     ExtractorError,
-    parse_qs
+    parse_qs,
+    try_get
 )
 
 
@@ -69,7 +71,7 @@ class IPrimaIE(InfoExtractor):
         username, password = self._get_login_info()
 
         if username is None or password is None:
-            self.raise_login_required('Login is required to access any iPrima content', method='password')
+            self.raise_login_required('Login is required to access any iPrima content', method='any')
 
         login_page = self._download_webpage(
             self._LOGIN_URL, None, note='Downloading login page',
@@ -111,9 +113,21 @@ class IPrimaIE(InfoExtractor):
         elif error_code is not None:
             self.raise_no_formats('Access to stream infos forbidden', expected=True)
 
+    def _read_cookie(self):
+        cookie = self._get_cookies('https://www.iprima.cz').get('prima_current_user') or self._get_cookies('https://auth.iprima.cz').get('prima_current_user')
+        if cookie is None:
+            # always raised when using firefox because we need a session cookie
+            raise ExtractorError('Required cookie is missing. If you are using \'--cookies-from-browser firefox\', consider downloading your cookies and passing them with \'--cookies\' or using password/netrc.', expected=True)
+        self.access_token = try_get(self._parse_json(cookie, None, transform_source=lambda src: b64decode(src.value).decode('ascii')), lambda x: x['token']['access_token'], str)
+        if self.access_token is None:
+            raise ExtractorError('Could not extract access token from cookie')
+
     def _real_initialize(self):
         if not self.access_token:
-            self._login()
+            if self.get_param('cookiefile') is None and self.get_param('cookiesfrombrowser') is None:
+                self._login()
+            else:
+                self._read_cookie()
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
