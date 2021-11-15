@@ -110,6 +110,11 @@ class IPrimaIE(InfoExtractor):
     def _raise_access_error(self, error_code):
         if error_code == 'PLAY_GEOIP_DENIED':
             self.raise_geo_restricted(countries=['CZ'], metadata_available=True)
+        elif error_code == 'PLAY_SLOT_REQUIRED':
+            raise ExtractorError(
+                'Accounts with subscription allow downloads only from "registered devices". '
+                'Use --cookies or --cookies-from-browser to import cookies from a registered browser.',
+                expected=True)
         elif error_code is not None:
             self.raise_no_formats('Access to stream infos forbidden', expected=True)
 
@@ -131,6 +136,7 @@ class IPrimaIE(InfoExtractor):
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
+        cookies = self._get_cookies(url)
 
         webpage = self._download_webpage(url, video_id)
 
@@ -143,10 +149,15 @@ class IPrimaIE(InfoExtractor):
             r'pproduct_id\s*=\s*([\'"])(?P<id>p\d+)\1'),
             webpage, 'real id', group='id')
 
+        ott_headers = {'X-OTT-Access-Token': self.access_token}
+        if cookies and cookies.get('prima_uuid'):
+            slot_cookie = 'prima_slot_id_' + cookies.get('prima_uuid').value
+            if cookies.get(slot_cookie):
+                ott_headers.update({'X-OTT-Device': cookies.get(slot_cookie).value})
         metadata = self._download_json(
             f'https://api.play-backend.iprima.cz/api/v1//products/id-{video_id}/play',
             video_id, note='Getting manifest URLs', errnote='Failed to get manifest URLs',
-            headers={'X-OTT-Access-Token': self.access_token},
+            headers=ott_headers,
             expected_status=403)
 
         self._raise_access_error(metadata.get('errorCode'))
