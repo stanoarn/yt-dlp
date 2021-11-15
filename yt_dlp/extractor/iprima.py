@@ -122,7 +122,10 @@ class IPrimaIE(InfoExtractor):
     def _read_cookie(self):
         cookie = self._get_cookies('https://www.iprima.cz').get('prima_current_user') or self._get_cookies('https://auth.iprima.cz').get('prima_current_user')
         if cookie is None:
-            self.report_warning('Session cookie is missing. If you are using \'--cookies-from-browser firefox\', consider downloading your cookies and passing them with \'--cookies\' or using password/netrc.')
+            self.report_warning('Session cookie not found')
+            username, password = self._get_login_info()
+            if 'firefox' in self.get_param('cookiesfrombrowser') and (username is None or password is None):
+                self.report_warning('If you are using \'--cookies-from-browser firefox\', please download your cookies and pass them with --cookies, or use --username and --password, or --netrc.')
             return
         self.access_token = try_get(self._parse_json(cookie, None, transform_source=lambda src: b64decode(src.value).decode('ascii'), fatal=False), lambda x: x['token']['access_token'], str)
         if self.access_token is None:
