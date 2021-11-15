@@ -22,6 +22,7 @@ class IPrimaIE(InfoExtractor):
     _NETRC_MACHINE = 'iprima'
     _LOGIN_URL = 'https://auth.iprima.cz/oauth2/login'
     _TOKEN_URL = 'https://auth.iprima.cz/oauth2/token'
+    _LOGIN_REQUIRED = True
     access_token = None
 
     _TESTS = [{
@@ -121,18 +122,20 @@ class IPrimaIE(InfoExtractor):
     def _read_cookie(self):
         cookie = self._get_cookies('https://www.iprima.cz').get('prima_current_user') or self._get_cookies('https://auth.iprima.cz').get('prima_current_user')
         if cookie is None:
-            # always raised when using firefox because we need a session cookie
-            raise ExtractorError('Required cookie is missing. If you are using \'--cookies-from-browser firefox\', consider downloading your cookies and passing them with \'--cookies\' or using password/netrc.', expected=True)
-        self.access_token = try_get(self._parse_json(cookie, None, transform_source=lambda src: b64decode(src.value).decode('ascii')), lambda x: x['token']['access_token'], str)
+            self.report_warning('Session cookie is missing. If you are using \'--cookies-from-browser firefox\', consider downloading your cookies and passing them with \'--cookies\' or using password/netrc.')
+            return
+        self.access_token = try_get(self._parse_json(cookie, None, transform_source=lambda src: b64decode(src.value).decode('ascii'), fatal=False), lambda x: x['token']['access_token'], str)
         if self.access_token is None:
-            raise ExtractorError('Could not extract access token from cookie')
+            self.report_warning('Could not extract access token from cookie')
+            return
+        self._LOGIN_REQUIRED = False
 
     def _real_initialize(self):
         if not self.access_token:
-            if self.get_param('cookiefile') is None and self.get_param('cookiesfrombrowser') is None:
-                self._login()
-            else:
+            if self.get_param('cookiefile') or self.get_param('cookiesfrombrowser'):
                 self._read_cookie()
+            if self._LOGIN_REQUIRED:
+                self._login()
 
     def _real_extract(self, url):
         video_id = self._match_id(url)
