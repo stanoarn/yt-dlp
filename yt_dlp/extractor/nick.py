@@ -1,7 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
-
 from .mtv import MTVServicesInfoExtractor
 from ..utils import update_url_query
 
@@ -190,26 +186,6 @@ class NickDeIE(MTVServicesInfoExtractor):
         config = self._download_json(
             'http://media.mtvnservices.com/pmt/e1/access/index.html?uri=%s&configtype=edge&ref=%s' % (uri, url), video_id)
         return self._remove_template_parameter(config['feedWithQueryParams'])
-
-
-class NickNightIE(NickDeIE):
-    IE_NAME = 'nicknight'
-    _VALID_URL = r'https?://(?:www\.)(?P<host>nicknight\.(?:de|at|tv))/(?:playlist|shows)/(?:[^/]+/)*(?P<id>[^/?#&]+)'
-    _TESTS = [{
-        'url': 'http://www.nicknight.at/shows/977-awkward/videos/85987-nimmer-beste-freunde',
-        'only_matching': True,
-    }, {
-        'url': 'http://www.nicknight.at/shows/977-awkward',
-        'only_matching': True,
-    }, {
-        'url': 'http://www.nicknight.at/shows/1900-faking-it',
-        'only_matching': True,
-    }]
-
-    def _extract_mrss_url(self, webpage, *args):
-        return self._search_regex(
-            r'mrss\s*:\s*(["\'])(?P<url>http.+?)\1', webpage,
-            'mrss url', group='url')
 
 
 class NickRuIE(MTVServicesInfoExtractor):

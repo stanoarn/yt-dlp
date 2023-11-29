@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import re
 
 from .common import InfoExtractor
@@ -11,7 +8,7 @@ from ..utils import (
 
 
 class ThreeSpeakIE(InfoExtractor):
-    _VALID_URL = r'(?:https?://)(?:www\.)?3speak\.tv/watch\?v\=[^/]+/(?P<id>[^/$&#?]+)'
+    _VALID_URL = r'https?://(?:www\.)?3speak\.tv/watch\?v\=[^/]+/(?P<id>[^/$&#?]+)'
 
     _TESTS = [{
         'url': 'https://3speak.tv/watch?v=dannyshine/wjgoxyfy',
@@ -60,7 +57,6 @@ class ThreeSpeakIE(InfoExtractor):
                 'quality': 11,
                 'format_note': 'Original file',
             })
-        self._sort_formats(formats)
         return {
             'id': id,
             'title': data_json.get('title') or data_json.get('root_title'),
@@ -75,7 +71,7 @@ class ThreeSpeakIE(InfoExtractor):
 
 
 class ThreeSpeakUserIE(InfoExtractor):
-    _VALID_URL = r'(?:https?://)(?:www\.)?3speak\.tv/user/(?P<id>[^/$&?#]+)'
+    _VALID_URL = r'https?://(?:www\.)?3speak\.tv/user/(?P<id>[^/$&?#]+)'
 
     _TESTS = [{
         'url': 'https://3speak.tv/user/theycallmedan',

@@ -1,10 +1,8 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 from .common import InfoExtractor
 
 
 class NRLTVIE(InfoExtractor):
+    _WORKING = False
     _VALID_URL = r'https?://(?:www\.)?nrl\.com/tv(/[^/]+)*/(?P<id>[^/?&#]+)'
     _TEST = {
         'url': 'https://www.nrl.com/tv/news/match-highlights-titans-v-knights-862805/',

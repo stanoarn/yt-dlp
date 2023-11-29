@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from .common import InfoExtractor
 
 
@@ -33,7 +31,6 @@ class GrouponIE(InfoExtractor):
     }
 
     _PROVIDERS = {
-        'ooyala': ('ooyala:%s', 'Ooyala'),
         'youtube': ('%s', 'Youtube'),
     }
 
